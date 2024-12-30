@@ -1,5 +1,7 @@
 package com.student.StudentsMarkDetail.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.student.StudentsMarkDetail.commonutils.ApiResponse;
 import com.student.StudentsMarkDetail.commonutils.customannotation.ValidParam;
 import com.student.StudentsMarkDetail.entity.Students;
 import com.student.StudentsMarkDetail.service.StudentsService;
@@ -9,8 +11,9 @@ import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,22 +22,34 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Set;
 
 @RestController
 @CrossOrigin(origins = "*")
 @RequestMapping("api/v1/students")
-@Validated
 public class StudentsController {
 
     @Autowired
     private StudentsService service;
 
-    @PostMapping("/save")
-    private ResponseEntity<Object> saveStudent(@Valid @RequestBody Students students) {
-        return service.saveStudent(students);
+    @PostMapping(value = "/save", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    private ResponseEntity<Object> saveStudent(@RequestParam("studentData") String studentData, @RequestParam("profileImg") MultipartFile profileImg) {
+        try{
+            ObjectMapper objectMapper = new ObjectMapper();
+            Students student = objectMapper.readValue(studentData, Students.class);
+            if (!profileImg.isEmpty()) {
+                student.setProfileImg(profileImg.getBytes());
+            }
+            return service.saveStudent(student);
+        }
+        catch (Exception ex){
+            return new ResponseEntity<>(new ApiResponse("Failed to save student: " + ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PutMapping("/edit/{rollNo}")

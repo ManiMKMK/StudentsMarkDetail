@@ -22,6 +22,15 @@ public class Students {
     @Size(min = 10,max = 10, message = "Enter 10 Digit mobile Number")
     @Pattern(regexp = "^[6-9]\\d{9}$", message = "Invalid Mobile Number")
     private String mobile;
+    private byte[] profileImg;
+
+    public byte[] getProfileImg() {
+        return profileImg;
+    }
+
+    public void setProfileImg(byte[] profileImg) {
+        this.profileImg = profileImg;
+    }
 
     public Students() {
     }

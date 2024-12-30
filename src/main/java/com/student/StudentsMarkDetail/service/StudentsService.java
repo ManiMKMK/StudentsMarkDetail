@@ -1,6 +1,7 @@
 package com.student.StudentsMarkDetail.service;
 
 import com.student.StudentsMarkDetail.commonutils.ApiResponse;
+import com.student.StudentsMarkDetail.entity.StudentDTO;
 import com.student.StudentsMarkDetail.entity.Students;
 import com.student.StudentsMarkDetail.repo.StudentsRepository;
 import org.slf4j.Logger;
@@ -10,6 +11,10 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import org.apache.commons.io.IOUtils;
+
+import java.util.Base64;
 
 @Service
 public class StudentsService {
@@ -29,7 +34,6 @@ public class StudentsService {
             // Handle duplicate key exception (e.g., duplicate rollNo)
             logger.error("Duplicate roll number detected: {}", students.getRollNo(), ex);
             return new ResponseEntity<>(new ApiResponse("Student with this roll number already exists."), HttpStatus.CONFLICT);
-
         }
         catch (Exception ex) {
             logger.error("Exception while Save Students. {}", ex.getMessage(), ex);
@@ -67,13 +71,24 @@ public class StudentsService {
         return new ResponseEntity<>(students, HttpStatus.OK);
     }
 
-    // Method to find student by roll number
     public ResponseEntity<Object> findByRollNo(String rollNo) {
         Students student = repo.findByRollNo(rollNo);
         if (student != null) {
-            return new ResponseEntity<>(student, HttpStatus.OK);
+            String base64Image = student.getProfileImg() != null
+                    ? Base64.getEncoder().encodeToString(student.getProfileImg())
+                    : null;
+
+            StudentDTO studentDTO = new StudentDTO(
+                    student.getName(),
+                    student.getRollNo(),
+                    student.getMobile(),
+                    base64Image
+            );
+
+            return new ResponseEntity<>(studentDTO, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(new ApiResponse("Student not found"), HttpStatus.NOT_FOUND);
         }
     }
+
 }
